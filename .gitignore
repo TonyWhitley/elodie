@@ -9,3 +9,6 @@ build/**
 **/*.dng
 **/*.nef
 **/*.rw2
+*.suo
+/elodie.sln
+/elodie.pyproj

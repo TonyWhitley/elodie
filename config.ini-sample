@@ -1,2 +1,20 @@
 [MapQuest]
 key=your-api-key-goes-here
+
+
+# Creating your own folder structure - an example
+
+[Directory]
+# The identifiers month, year, location, city etc. are pre-defined by Elodie
+month=%B
+year=%Y
+location=%city
+
+# full_path is the name of the path where Elodie will put the files:
+full_path=%month/%year/%album|%location|%"UnknownLocation"
+
+# The result of that will  be
+# November/2017/albumName        if the album name is known
+# November/2017/London           if the location is known
+# November/2017/UnknownLocation  otherwise
+

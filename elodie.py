@@ -224,6 +224,12 @@ def update_time(media, file_path, time_string):
                 required=True)
 def _update(album, location, time, title, paths, debug):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
+    album     if not None update the name of the image album (huh?)
+    location  if not None update the location to the co-ords of the named location
+    time      if not None update the time
+    title     if not None change the title (and the filename?)
+    paths     list of paths, may be folders. Prepend with <user> if path starts with ~
+    debug     Boolean
     """
     constants.debug = debug
     has_errors = False

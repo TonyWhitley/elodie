@@ -197,9 +197,9 @@ class Db(object):
     def update_hash_db(self):
         """Write the hash db to disk."""
         with open(constants.hash_db, 'w') as f:
-            json.dump(self.hash_db, f)
+            json.dump(self.hash_db, f, indent=0)
 
     def update_location_db(self):
         """Write the location db to disk."""
         with open(constants.location_db, 'w') as f:
-            json.dump(self.location_db, f)
+            json.dump(self.location_db, f, indent=1, sort_keys =True)

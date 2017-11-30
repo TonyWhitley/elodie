@@ -144,6 +144,16 @@ class FileSystem(object):
             base_name = base_name.replace('-%s' % title_sanitized, '')
             base_name = '%s-%s' % (base_name, title_sanitized)
 
+        # What if basename already has date_time information?
+        # e.g. 20160706_192934.jpg 
+        #      20160706_192934-1.jpg 
+        # strip it out
+        base_name = re.sub(
+            '^\d{4}\d{2}\d{2}_\d{2}\d{2}\d{2}',
+            '',
+            base_name
+        )
+
         file_name = '%s-%s.%s' % (
             time.strftime(
                 '%Y-%m-%d_%H-%M-%S',
@@ -152,6 +162,18 @@ class FileSystem(object):
             base_name,
             metadata['extension'])
         return file_name.lower()
+
+    def _parseFallbacks(self, dict, mask):
+        """ Given %a|%b|"default" and a dict which may contain a or b
+            return [a, value of a], [b, value of b] or ['', "default"]
+        """
+        for p in mask.split('|'):
+            if p[0] == '%':
+               if p[1:] in dict:
+                   return [p[1:], dict[p[1:]]]
+            if p[0] == '"':   # "default"
+                return ['', p]
+        return []
 
     def get_folder_path_definition(self):
         """Returns a list of folder definitions.
@@ -206,11 +228,15 @@ class FileSystem(object):
                     [(part, '')]
                 )
             else:
+                """ original  """
                 this_part = []
                 for p in part.split('|'):
                     this_part.append(
                         (p, config_directory[p] if p in config_directory else '')
                     )
+                """ Not implemented yet
+                this_part = self._parseFallbacks(config_directory, part)
+                """
                 self.cached_folder_path_definition.append(this_part)
 
         return self.cached_folder_path_definition
@@ -237,12 +263,13 @@ class FileSystem(object):
                         time.strftime(mask, metadata['date_taken'])
                     )
                     break
-                elif part in ('location', 'city', 'state', 'country'):
+                elif part in ('location', 'hamlet', 'village', 'town', 'city', 'state', 'country'):
                     place_name = geolocation.place_name(
                         metadata['latitude'],
                         metadata['longitude']
                     )
 
+                    # TBD _x = self._parseFallbacks(metadata, mask)
                     location_parts = re.findall('(%[^%]+)', mask)
                     parsed_folder_name = self.parse_mask_for_location(
                         mask,
