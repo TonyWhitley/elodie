@@ -12,3 +12,9 @@ build/**
 *.suo
 /elodie.sln
 /elodie.pyproj
+/elodie/tests/files/photo.cr2
+/elodie/tests/.noseids
+/elodie/dbg_test_helper.py
+/.coverage
+/.noseids
+/n.py

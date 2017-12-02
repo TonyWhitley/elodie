@@ -49,7 +49,7 @@ def download_file(name, destination):
         return final_name
     except Exception as e:
         return False
-    
+
 def get_file(name):
     file_path = get_file_path(name)
     if not os.path.isfile(file_path):
@@ -113,8 +113,13 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-      tz_shift = old_div((datetime.fromtimestamp(0) -
-                  datetime.utcfromtimestamp(0)).seconds,3600)
+      _t = time.time()
+      _local0 = datetime.fromtimestamp(_t)
+      _utc0 = datetime.utcfromtimestamp(_t)
+      _secs = (_local0-_utc0).seconds
+      tz_shift = old_div(_secs,3600)
+      #tz_shift = old_div((datetime.fromtimestamp(0) -
+      #            datetime.utcfromtimestamp(0)).seconds,3600)
       # replace timestamp in file_name
       m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
       t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
