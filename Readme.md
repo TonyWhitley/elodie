@@ -172,7 +172,7 @@ Usage: elodie.py verify
 
 OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View`? No problem!
 
-You can add a custom folder structure by editing your `config.ini` file (which should be placed under `~/.elodie/config.ini`).
+You can add a custom folder structure by editing your `config.ini` file (which should be placed under `~/.elodie/config.ini` (that's `c:\Users\<user name>\.elodie\config.ini` in Windows)).
 
 #### Custom folder examples
 
@@ -334,7 +334,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 
 I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
 
-Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini`. I've included a `config.ini-sample` file which you can copy to `config.ini`.
+Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini` (that's `c:\Users\<user name>\.elodie\config.ini` in Windows). I've included a `config.ini-sample` file which you can copy to `config.ini`.
 
 ```
 mkdir ~/.elodie
