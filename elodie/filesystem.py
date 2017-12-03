@@ -11,7 +11,7 @@ import re
 import shutil
 import time
 
-from elodie import compatability
+from elodie import compatibility
 from elodie import log
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -212,7 +212,7 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            compatability._copyfile(_file, dest_path)
+            compatibility._copyfile(_file, dest_path)
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
         db.add_hash(checksum, dest_path)
