@@ -363,6 +363,9 @@ def _test_photo_type_get(type, date):
 
     shutil.rmtree(folder)
 
+    print()
+    print(metadata['date_taken'])
+    print(helper.time_convert(date))
     assert metadata['date_taken'] == helper.time_convert(date), '{} date {}'.format(type, metadata['date_taken'])
 
 def _test_photo_type_set(type, date):

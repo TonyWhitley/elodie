@@ -135,7 +135,7 @@ def path_tz_fix(file_name):
 
 def time_convert(s_time):
     if is_windows():
-        return time.gmtime((time.mktime(s_time)))
+        return time.gmtime((time.mktime(s_time)+time.altzone))
     else:
         return s_time
 

@@ -18,3 +18,4 @@ build/**
 /.coverage
 /.noseids
 /n.py
+/nose.readme.txt

@@ -13,6 +13,7 @@ from . import helper
 from elodie.config import load_config
 from elodie.destination_folder import DestinationFolder
 from elodie.media.photo import Photo
+from elodie.localstorage import mock_location_db
 
 os.environ['TZ'] = 'GMT'
 
@@ -447,3 +448,118 @@ full_path=%year/%album|%month|%"foo"/%month
 
     assert path_definition == expected, path_definition
 
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-multi_level_location' % gettempdir())
+@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
+def test_get_folder_path_definition_multi_level_location():
+    with open('%s/config.ini-multi_level_location' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+location=%country/%city|%county|%village
+# If %country\%city not available, fall back on %country\%county
+#   If %country\%county not available either, fall back on %country\%village
+year=%Y
+month=%B
+full_path=%location/%year/%month
+# -> France/Le Mans/2016
+        """)
+
+    #helper.reset_dbs()
+    #with open('%s/location.json-cached' % gettempdir(), 'w') as f:
+    #    f.write(
+    mock_location_db("""
+[
+ {
+  "lat": 54.9286804166667,
+  "long": -2.94800427777778,
+  "name": {
+   "city": "Carlisle",
+   "country": "UK",
+   "county": "Cumbria",
+   "default": "Carlisle",
+   "state": "England"
+  }
+ },
+ {
+  "lat": 55.4874000277778,
+  "long": -3.290884,
+  "name": {
+   "country": "UK",
+   "county": "Scottish Borders",
+   "default": "Meggethead",
+   "hamlet": "Meggethead",
+   "state": "Scotland"
+  }
+ },
+ {
+  "lat": 55.2033538611111,
+  "long": -4.55464691666667,
+  "name": {
+   "country": "UK",
+   "county": "South Ayrshire",
+   "default": "South Ayrshire",
+   "state": "Scotland"
+  }
+ },
+ {
+  "lat": 54.5187110833333,
+  "long": -1.50435136111111,
+  "name": {
+   "country": "UK",
+   "county": "Darlington",
+   "default": "Great Burdon",
+   "hamlet": "Great Burdon",
+   "state": "England"
+  }
+ },
+ {
+  "lat": 55.92352675,
+  "long": -5.15257691666667,
+  "name": {
+   "country": "UK",
+   "county": "Argyll and Bute",
+   "default": "Colintraive",
+   "state": "Scotland",
+   "village": "Colintraive"
+  }
+ }
+]
+"""
+    )
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    destination_folder = DestinationFolder()
+    path_definition = destination_folder.get_folder_path_definition()
+    
+    expected = [
+        [
+          ('location', '%country/%city|%county|%village')
+        ],
+        [
+          ('year', '%Y')
+        ],
+        [
+          ('month', '%B')
+        ]
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition
+
+
+    media = Photo(helper.get_file('plain.jpg'))
+    _metadata = media.get_metadata()
+    path = destination_folder.get_folder_path(_metadata)
+
+    assert path == os.path.join('Unknown Location', '2015', 'December'), path
+
+    media = Photo(helper.get_file('with-location.jpg'))
+    _metadata = media.get_metadata()
+    _metadata['longitude'] = -2.94800427777778
+    _metadata['latitude'] = 54.9286804166667
+    path = destination_folder.get_folder_path(_metadata)
+
+    assert path == os.path.join('UK', 'Carlisle', '2015', 'December'), path
+    #helper.restore_dbs()

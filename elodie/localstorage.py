@@ -15,12 +15,28 @@ from time import strftime
 
 from elodie import constants
 
+""" static variables used for the dbs for two reasons
+  1) So that mock functions can load them for testing
+     (easier than creating temporary .json files)
+  2) So the files only need to be read once
+     (speeds up the testing particularly)
+"""
+__hash_db__ = None
+__location_db__ = None
+
+def mock_location_db(json_string):
+  """Fill location_db with data for test purposes """
+  global __location_db__
+  __location_db__ = json.loads(json_string)
 
 class Db(object):
 
     """A class for interacting with the JSON files created by Elodie."""
 
     def __init__(self):
+        global __hash_db__
+        global __location_db__
+
         # verify that the application directory (~/.elodie) exists,
         #   else create it
         if not os.path.exists(constants.application_directory):
@@ -32,15 +48,19 @@ class Db(object):
             with open(constants.hash_db, 'a'):
                 os.utime(constants.hash_db, None)
 
-        self.hash_db = {}
+        if __hash_db__ == None:
+            self.hash_db = {}
 
-        # We know from above that this file exists so we open it
-        #   for reading only.
-        with open(constants.hash_db, 'r') as f:
-            try:
-                self.hash_db = json.load(f)
-            except ValueError:
-                pass
+            # We know from above that this file exists so we open it
+            #   for reading only.
+            with open(constants.hash_db, 'r') as f:
+                try:
+                    self.hash_db = json.load(f)
+                except ValueError:
+                    pass
+            __hash_db__ = self.hash_db
+        else:
+            self.hash_db = __hash_db__
 
         # If the location db doesn't exist we create it.
         # Otherwise we only open for reading
@@ -48,15 +68,19 @@ class Db(object):
             with open(constants.location_db, 'a'):
                 os.utime(constants.location_db, None)
 
-        self.location_db = []
+        if __location_db__ == None:
+            self.location_db = []
 
-        # We know from above that this file exists so we open it
-        #   for reading only.
-        with open(constants.location_db, 'r') as f:
-            try:
-                self.location_db = json.load(f)
-            except ValueError:
-                pass
+            # We know from above that this file exists so we open it
+            #   for reading only.
+            with open(constants.location_db, 'r') as f:
+                try:
+                    self.location_db = json.load(f)
+                except ValueError:
+                    pass
+            __location_db__ = self.location_db
+        else:
+            self.location_db = __location_db__
 
     def add_hash(self, key, value, write=False):
         """Add a hash to the hash db.
@@ -196,10 +220,17 @@ class Db(object):
 
     def update_hash_db(self):
         """Write the hash db to disk."""
+        global __hash_db__
+
         with open(constants.hash_db, 'w') as f:
             json.dump(self.hash_db, f, indent=0)
+            __hash_db__ = self.hash_db
 
     def update_location_db(self):
         """Write the location db to disk."""
+        global __location_db__
+
         with open(constants.location_db, 'w') as f:
             json.dump(self.location_db, f, indent=1, sort_keys =True)
+            __location_db__ = self.location_db
+

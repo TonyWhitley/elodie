@@ -10,7 +10,7 @@ from mock import patch
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from elodie import constants
-from elodie.config import load_config
+from elodie.config import load_config, mock_config_ini
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -29,3 +29,16 @@ def test_load_config_singleton_success():
 def test_load_config_singleton_no_file():
     config = load_config()
     assert config == {}, config
+
+from nose.plugins.skip import SkipTest
+
+def test_load_mock_config_ini():
+    raise SkipTest("mock_config_ini not implemented yet")
+'''
+    mock_config_ini("""
+[MapQuest]
+key=your-api-key-might-go-here
+    """)
+    config = load_config()
+    assert config['MapQuest']['key'] == 'your-api-key-might-go-here', config.get('MapQuest', 'key')
+'''
