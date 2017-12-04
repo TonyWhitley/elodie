@@ -49,7 +49,7 @@ def download_file(name, destination):
         return final_name
     except Exception as e:
         return False
-
+    
 def get_file(name):
     file_path = get_file_path(name)
     if not os.path.isfile(file_path):
@@ -113,13 +113,10 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-      _t = time.time()
-      _local0 = datetime.fromtimestamp(_t)
-      _utc0 = datetime.utcfromtimestamp(_t)
-      _secs = (_local0-_utc0).seconds
-      tz_shift = old_div(_secs,3600)
-      #tz_shift = old_div((datetime.fromtimestamp(0) -
-      #            datetime.utcfromtimestamp(0)).seconds,3600)
+	  # (Windows/Python 3.6 does not accept a timestamp of 0 so
+	  #  use time.time() instead)
+      tz_shift = old_div((datetime.fromtimestamp(time.time()) -
+                  datetime.utcfromtimestamp(time.time())).seconds,3600)
       # replace timestamp in file_name
       m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
       t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
@@ -153,19 +150,28 @@ def isclose(a, b, rel_tol = 1e-8):
             diff <= abs(rel_tol * b))
 
 def reset_dbs():
-    hash_db = constants.hash_db
-    if os.path.isfile(hash_db):
-        os.rename(hash_db, '{}-test'.format(hash_db))
+    hash_db = '{}-test'.format(constants.hash_db)
+    if not os.path.isfile(hash_db):
+	    hash_db = constants.hash_db
+	    if os.path.isfile(hash_db):
+	        os.rename(hash_db, '{}-test'.format(hash_db))
+	#else restore_dbs wasn't called by a previous test
+	
 
-    location_db = constants.location_db
+    location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-        os.rename(location_db, '{}-test'.format(location_db))
+	    location_db = constants.location_db
+	    if os.path.isfile(location_db):
+	        os.rename(location_db, '{}-test'.format(location_db))
+	#else restore_dbs wasn't called by a previous test
 
 def restore_dbs():
     hash_db = '{}-test'.format(constants.hash_db)
     if os.path.isfile(hash_db):
-        os.rename(hash_db, hash_db.replace('-test', ''))
+		# If you want cross-platform overwriting of the destination, 
+		# use os.replace() instead of rename().
+        os.replace(hash_db, hash_db.replace('-test', ''))
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-        os.rename(location_db, location_db.replace('-test', ''))
+        os.replace(location_db, location_db.replace('-test', ''))
