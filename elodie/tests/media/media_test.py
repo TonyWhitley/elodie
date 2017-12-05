@@ -10,6 +10,8 @@ import string
 import tempfile
 import time
 
+from nose.plugins.attrib import attr
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -100,6 +102,7 @@ def test_set_original_name_when_exists():
 
     assert result is None, result
 
+@attr('DST')
 def test_set_original_name_when_does_not_exist():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -117,6 +120,7 @@ def test_set_original_name_when_does_not_exist():
     assert metadata_after['original_name'] == 'plain.jpg', metadata_after
     assert result is True, result
 
+@attr('DST')
 def test_set_original_name_with_arg():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -136,6 +140,7 @@ def test_set_original_name_with_arg():
     assert metadata_after['original_name'] == new_name, metadata_after
     assert result is True, result
 
+@attr('DST')
 def test_set_original_name():
     files = ['plain.jpg', 'audio.m4a', 'photo.nef', 'video.mov']
 

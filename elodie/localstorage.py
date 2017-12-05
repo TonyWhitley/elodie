@@ -4,6 +4,7 @@ Methods for interacting with information Elodie caches about stored media.
 from builtins import map
 from builtins import object
 
+import copy
 import hashlib
 import json
 import os
@@ -58,9 +59,9 @@ class Db(object):
                     self.hash_db = json.load(f)
                 except ValueError:
                     pass
-            __hash_db__ = self.hash_db
+            __hash_db__ = copy.deepcopy(self.hash_db)
         else:
-            self.hash_db = __hash_db__
+            self.hash_db = copy.deepcopy(__hash_db__)
 
         # If the location db doesn't exist we create it.
         # Otherwise we only open for reading
@@ -78,9 +79,9 @@ class Db(object):
                     self.location_db = json.load(f)
                 except ValueError:
                     pass
-            __location_db__ = self.location_db
+            __location_db__ = copy.deepcopy(self.location_db)
         else:
-            self.location_db = __location_db__
+            self.location_db = copy.deepcopy(__location_db__)
 
     def add_hash(self, key, value, write=False):
         """Add a hash to the hash db.
@@ -224,7 +225,7 @@ class Db(object):
 
         with open(constants.hash_db, 'w') as f:
             json.dump(self.hash_db, f, indent=0)
-            __hash_db__ = self.hash_db
+            __hash_db__ = copy.deepcopy(self.hash_db)
 
     def update_location_db(self):
         """Write the location db to disk."""
@@ -232,5 +233,5 @@ class Db(object):
 
         with open(constants.location_db, 'w') as f:
             json.dump(self.location_db, f, indent=1, sort_keys =True)
-            __location_db__ = self.location_db
+            __location_db__ = copy.deepcopy(self.location_db)
 

@@ -7,6 +7,8 @@ import sys
 import time
 from tempfile import gettempdir
 
+from nose.plugins.attrib import attr
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
@@ -378,6 +380,7 @@ def test_process_video_with_album_then_title():
     assert origin_checksum != destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
+@attr('DST')
 @mock.patch('elodie.config.config_file', '%s/config.ini-fallback-folder' % gettempdir())
 def test_process_file_fallback_folder():
     with open('%s/config.ini-fallback-folder' % gettempdir(), 'w') as f:

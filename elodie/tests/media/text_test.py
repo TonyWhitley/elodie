@@ -9,6 +9,7 @@ import tempfile
 import time
 
 from nose.plugins.skip import SkipTest
+from nose.plugins.attrib import attr
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -61,6 +62,7 @@ def test_get_coordinate_longitude():
     text.get_metadata()
     assert text.get_coordinate('longitude') == '0.162714', text.get_coordinate('longitude')
 
+@attr('DST')
 def test_get_date_taken():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()
@@ -219,6 +221,7 @@ def test_set_album_without_header():
 
     assert album_name == metadata_new['album'], metadata_new
 
+@attr('DST')
 def test_set_date_taken_without_header():
     temporary_folder, folder = helper.create_working_folder()
 

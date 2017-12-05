@@ -8,6 +8,8 @@ import tempfile
 import time
 import datetime
 
+from nose.plugins.attrib import attr
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -111,6 +113,7 @@ def test_set_album():
 
     assert metadata_new['album'] == 'Test Album', metadata_new['album']
 
+@attr('DST')
 def test_set_date_taken():
     temporary_folder, folder = helper.create_working_folder()
 

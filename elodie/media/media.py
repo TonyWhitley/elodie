@@ -135,8 +135,7 @@ class Media(Base):
                 metadata = et.get_metadata(source)
                 if not metadata:
                     metadata = False
-                else:
-                    self.exiftool_attributes_cache = metadata
+          self.exiftool_attributes_cache = metadata
 
         return self.exiftool_attributes_cache
 

@@ -7,6 +7,8 @@ import shutil
 import sys
 from tempfile import gettempdir
 
+from nose.plugins.attrib import attr
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
@@ -449,6 +451,7 @@ full_path=%year/%album|%month|%"foo"/%month
     assert path_definition == expected, path_definition
 
 
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
 @mock.patch('elodie.config.config_file', '%s/config.ini-multi_level_location' % gettempdir())
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_get_folder_path_definition_multi_level_location():

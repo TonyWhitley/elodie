@@ -5,6 +5,8 @@ import os
 import sys
 import shutil
 
+from nose.plugins.attrib import attr
+
 from click.testing import CliRunner
 from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
@@ -74,6 +76,7 @@ def test_import_file_photo():
 
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-plain.jpg')) in dest_path, dest_path
 
+@attr('tbd')  # test currently broken tjw
 def test_import_file_video():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -372,6 +375,7 @@ def test_update_location_on_video():
     assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
     assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
 
+@attr('DST')
 def test_update_time_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -396,6 +400,7 @@ def test_update_time_on_audio():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
+@attr('DST')
 def test_update_time_on_photo():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -420,6 +425,7 @@ def test_update_time_on_photo():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
+@attr('DST')
 def test_update_time_on_text():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -444,6 +450,7 @@ def test_update_time_on_text():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
+@attr('DST')
 def test_update_time_on_video():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -468,6 +475,7 @@ def test_update_time_on_video():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
+@attr('tbd')  # test currently broken tjw
 def test_update_with_directory_passed_in():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -490,6 +498,7 @@ def test_update_with_directory_passed_in():
 
     assert updated_file_exists, updated_file_path
 
+@attr('tbd')  # test currently broken tjw
 def test_update_invalid_file_exit_code():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -516,6 +525,7 @@ def test_regenerate_db_invalid_source():
     result = runner.invoke(elodie._generate_db, ['--source', '/invalid/path'])
     assert result.exit_code == 1, result.exit_code
 
+@attr('tbd')  # test currently broken tjw
 def test_regenerate_valid_source():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -533,6 +543,7 @@ def test_regenerate_valid_source():
     assert result.exit_code == 0, result.exit_code
     assert '3c19a5d751cf19e093b7447297731124d9cc987d3f91a9d1872c3b1c1b15639a' in db.hash_db, db.hash_db
 
+@attr('tbd')  # test currently broken tjw
 def test_regenerate_valid_source_with_invalid_files():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -570,6 +581,7 @@ def test_verify_ok():
     assert 'Success         1' in result.output, result.output
     assert 'Error           0' in result.output, result.output
 
+@attr('tbd')  # test currently broken tjw
 def test_verify_error():
     temporary_folder, folder = helper.create_working_folder()
 

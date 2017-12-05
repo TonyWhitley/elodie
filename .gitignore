@@ -19,3 +19,4 @@ build/**
 /.noseids
 /n.py
 /nose.readme.txt
+/timed_Nosetests.txt

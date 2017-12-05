@@ -10,6 +10,7 @@ import tempfile
 import time
 
 from nose.plugins.skip import SkipTest
+from nose.plugins.attrib import attr
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -109,6 +110,7 @@ def test_get_coordinates_with_zero_coordinate():
     assert helper.isclose(latitude,51.55325), latitude
     assert helper.isclose(longitude,-0.00417777777778), longitude
 
+@attr('DST')
 def test_get_date_taken():
     photo = Photo(helper.get_file('plain.jpg'))
     date_taken = photo.get_date_taken()
@@ -181,6 +183,7 @@ def test_set_album():
 
     assert metadata_new['album'] == 'Test Album', metadata_new['album']
 
+@attr('DST')
 def test_set_date_taken_with_missing_datetimeoriginal():
     # When datetimeoriginal (or other key) is missing we have to add it gh-74
     # https://github.com/jmathai/elodie/issues/74
@@ -204,6 +207,7 @@ def test_set_date_taken_with_missing_datetimeoriginal():
     #assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
     assert date_taken == helper.time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)), metadata['date_taken']
 
+@attr('DST')
 def test_set_date_taken():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -323,6 +327,7 @@ def test_set_title_non_ascii():
 # is the only information which needs to be added to run the tests
 # for that file type.
 # https://nose.readthedocs.io/en/latest/writing_tests.html#test-generators
+@attr('DST')
 def test_various_types():
     types = Photo.extensions
     #extensions = ('arw', 'cr2', 'dng', 'gif', 'jpeg', 'jpg', 'nef', 'rw2')
