@@ -100,7 +100,7 @@ def test_set_date_taken():
 
     shutil.rmtree(folder)
 
-    assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
+    assert date_taken == helper.time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)), metadata['date_taken']
 
 def test_set_location():
     temporary_folder, folder = helper.create_working_folder()

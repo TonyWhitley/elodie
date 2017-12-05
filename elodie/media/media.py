@@ -35,6 +35,7 @@ class Media(Base):
 
     def __init__(self, source=None):
         super(Media, self).__init__(source)
+        self.exiftool_attributes_cache = None
         self.exif_map = {
             'date_taken': [
                 'EXIF:DateTimeOriginal',
@@ -121,18 +122,23 @@ class Media(Base):
         """Get attributes for the media object from exiftool.
 
         :returns: dict, or False if exiftool was not available.
+
+        The attributes are cached when they are read for the first time.
         """
-        source = self.source
-        exiftool = get_exiftool()
-        if(exiftool is None):
-            return False
+        if self.exiftool_attributes_cache == None:
+          source = self.source
+          exiftool = get_exiftool()
+          if(exiftool is None):
+              metadata = False
+          else:
+            with ExifTool(addedargs=self.exiftool_addedargs) as et:
+                metadata = et.get_metadata(source)
+                if not metadata:
+                    metadata = False
+                else:
+                    self.exiftool_attributes_cache = metadata
 
-        with ExifTool(addedargs=self.exiftool_addedargs) as et:
-            metadata = et.get_metadata(source)
-            if not metadata:
-                return False
-
-        return metadata
+        return self.exiftool_attributes_cache
 
     def get_camera_make(self):
         """Get the camera make stored in EXIF.

@@ -128,7 +128,7 @@ def place_name(lat, lon):
 
     # Try to get cached location first
     db = Db()
-    # 3km distace radious for a match
+    # 3km distace radius for a match
     cached_place_name = db.get_location_name(lat, lon, 3000)
     # We check that it's a dict to coerce an upgrade of the location
     #  db from a string location to a dictionary. See gh-160.
@@ -139,7 +139,8 @@ def place_name(lat, lon):
     geolocation_info = lookup(lat=lat, lon=lon)
     if(geolocation_info is not None and 'address' in geolocation_info):
         address = geolocation_info['address']
-        for loc in ['city', 'state', 'country']:
+        log.info('Location: "%s"' % geolocation_info['display_name'])
+        for loc in ['hamlet', 'village', 'town', 'city', 'county', 'state', 'country']:
             if(loc in address):
                 lookup_place_name[loc] = address[loc]
                 # In many cases the desired key is not available so we
@@ -193,6 +194,7 @@ def lookup(**kwargs):
 
 
 def parse_result(result):
+    log.info('MapQuest result "%s"' % result)
     if('error' in result):
         return None
 

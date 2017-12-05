@@ -113,8 +113,10 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-      tz_shift = old_div((datetime.fromtimestamp(0) -
-                  datetime.utcfromtimestamp(0)).seconds,3600)
+	  # (Windows/Python 3.6 does not accept a timestamp of 0 so
+	  #  use time.time() instead)
+      tz_shift = old_div((datetime.fromtimestamp(time.time()) -
+                  datetime.utcfromtimestamp(time.time())).seconds,3600)
       # replace timestamp in file_name
       m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
       t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
@@ -130,7 +132,7 @@ def path_tz_fix(file_name):
 
 def time_convert(s_time):
     if is_windows():
-        return time.gmtime((time.mktime(s_time)))
+        return time.gmtime((time.mktime(s_time)+time.altzone))
     else:
         return s_time
 
@@ -156,7 +158,6 @@ def reset_dbs():
 	        os.rename(hash_db, '{}-test'.format(hash_db))
     #else restore_dbs wasn't called by a previous test, keep the
     #existing hash_db backup
-	
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
