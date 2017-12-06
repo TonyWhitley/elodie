@@ -19,4 +19,4 @@ install:
   - "%PYTHON%/Scripts/pip.exe install coverage"
 
 test_script:
-  - "%PYTHON%/Scripts/nosetests  -a ""!DST","!tbd"" --verbose=2 elodie.tests"
+  - "%PYTHON%/Scripts/nosetests  -a ""!DST","!tbd"" --verbosity=2 elodie.tests"
