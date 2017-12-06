@@ -13,8 +13,8 @@ environment:
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
-  - "echo > c:\projects\elodie\exiftool.exe"
-  - "path=%PATH%;c:\projects\elodie"
+  - "echo > c:/projects/elodie/exiftool.exe"
+  - "path=%PATH%;c:/projects/elodie"
   - "echo %PATH%"
 
 install:
