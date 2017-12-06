@@ -13,8 +13,10 @@ environment:
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
-  - "echo > c:/projects/elodie/exiftool.exe"
-  - "path=%PATH%;c:/projects/elodie"
+  - "appveyor DownloadFile https://sno.phy.queensu.ca/~phil/exiftool/exiftool-10.68.zip"
+  - "7z e exiftool-10.68.zip"
+  - "ren exiftool(-k).exe exiftool.exe"
+  - "path=%PATH%;%cd%"
   - "echo %PATH%"
 
 install:
