@@ -17,6 +17,7 @@ init:
 install:
   - "%PYTHON%/Scripts/pip.exe install nose"
   - "%PYTHON%/Scripts/pip.exe install coverage"
+  - "%PYTHON%/Scripts/pip.exe install -r elodie/tests/requirements.txt"
 
 test_script:
   - "%PYTHON%/Scripts/nosetests  -a !DST,!tbd --verbosity=2 elodie.tests"
