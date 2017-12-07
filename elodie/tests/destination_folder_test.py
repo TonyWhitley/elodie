@@ -443,34 +443,14 @@ full_path=%year/%album|%month|%"foo"/%month
         del load_config.config
     destination_folder = DestinationFolder()
     path_definition = destination_folder.get_folder_path_definition()
-    
+
     expected = [[('year', '%Y')], [('album', ''), ('month', '%M'), ('"foo"', '')], [('month', '%M')]]
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path_definition == expected, path_definition
 
-
-@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
-@mock.patch('elodie.config.config_file', '%s/config.ini-multi_level_location' % gettempdir())
-@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
-def test_get_folder_path_definition_multi_level_location():
-    with open('%s/config.ini-multi_level_location' % gettempdir(), 'w') as f:
-        f.write("""
-[Directory]
-location=%country/%city|%county|%village
-# If %country\%city not available, fall back on %country\%county
-#   If %country\%county not available either, fall back on %country\%village
-year=%Y
-month=%B
-full_path=%location/%year/%month
-# -> France/Le Mans/2016
-        """)
-
-    #helper.reset_dbs()
-    #with open('%s/location.json-cached' % gettempdir(), 'w') as f:
-    #    f.write(
-    mock_location_db("""
+mock_location_db_json_txt = """
 [
  {
   "lat": 54.9286804166667,
@@ -520,7 +500,6 @@ full_path=%location/%year/%month
   "long": -5.15257691666667,
   "name": {
    "country": "UK",
-   "county": "Argyll and Bute",
    "default": "Colintraive",
    "state": "Scotland",
    "village": "Colintraive"
@@ -528,41 +507,115 @@ full_path=%location/%year/%month
  }
 ]
 """
-    )
+multi_level_location_definition_CCCV = [
+    [
+        ('location', '%country/%city|%county|%village')
+    ],
+    [
+        ('year', '%Y')
+    ],
+    [
+        ('month', '%B')
+    ]
+]
+
+multi_level_location_config_json = """
+[Directory]
+location=%country/%city|%county|%village
+# If %country/%city not available, fall back on %country/%county
+#   If %country/%county not available either, fall back on %country/%village
+year=%Y
+month=%B
+full_path=%location/%year/%month
+# -> France/Le Mans/2016
+"""
+
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+@mock.patch('elodie.config.config_file', '%s/config.ini-multi_level_location' % gettempdir())
+def test_get_folder_path_definition_multi_level_location_definition():
+    with open('%s/config.ini-multi_level_location' % gettempdir(), 'w') as f:
+        f.write(multi_level_location_config_json)
+
+    mock_location_db(mock_location_db_json_txt)
 
     if hasattr(load_config, 'config'):
         del load_config.config
     destination_folder = DestinationFolder()
     path_definition = destination_folder.get_folder_path_definition()
-    
-    expected = [
-        [
-          ('location', '%country/%city|%county|%village')
-        ],
-        [
-          ('year', '%Y')
-        ],
-        [
-          ('month', '%B')
-        ]
-    ]
+
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path_definition == expected, path_definition
+    assert path_definition == multi_level_location_definition_CCCV, path_definition
 
-
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+def test_get_folder_path_definition_multi_level_location_decode_unknown():
+    destination_folder = DestinationFolder()
     media = Photo(helper.get_file('plain.jpg'))
     _metadata = media.get_metadata()
-    path = destination_folder.get_folder_path(_metadata)
+    # use multi_level_location_expected, no need to recalculate
+    path = destination_folder.get_folder_path(_metadata, path_parts=multi_level_location_definition_CCCV)
 
     assert path == os.path.join('Unknown Location', '2015', 'December'), path
 
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+def test_get_folder_path_definition_multi_level_location_decode_known_city():
+    destination_folder = DestinationFolder()
     media = Photo(helper.get_file('with-location.jpg'))
     _metadata = media.get_metadata()
-    _metadata['longitude'] = -2.94800427777778
     _metadata['latitude'] = 54.9286804166667
-    path = destination_folder.get_folder_path(_metadata)
+    _metadata['longitude'] = -2.94800427777778  # see mock_location_db_json_txt
+    # use multi_level_location_expected, no need to recalculate
+    path = destination_folder.get_folder_path(_metadata, path_parts=multi_level_location_definition_CCCV)
 
     assert path == os.path.join('UK', 'Carlisle', '2015', 'December'), path
-    #helper.restore_dbs()
+
+
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+def test_get_folder_path_definition_multi_level_location_decode_known_county():
+    destination_folder = DestinationFolder()
+    media = Photo(helper.get_file('with-location.jpg'))
+    _metadata = media.get_metadata()
+    _metadata['latitude'] = 55.4874000277778
+    _metadata['longitude'] = -3.290884
+    # use multi_level_location_expected, no need to recalculate
+    path = destination_folder.get_folder_path(_metadata, path_parts=multi_level_location_definition_CCCV)
+
+    assert path == os.path.join('UK', 'Scottish Borders', '2015', 'December'), path
+
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+def test_get_folder_path_definition_multi_level_location_decode_known_village():
+    destination_folder = DestinationFolder()
+    media = Photo(helper.get_file('with-location.jpg'))
+    _metadata = media.get_metadata()
+    _metadata['latitude'] = 55.92352675
+    _metadata['longitude'] = -5.15257691666667  # see mock_location_db_json_txt
+    # use multi_level_location_expected, no need to recalculate
+    path = destination_folder.get_folder_path(_metadata, path_parts=multi_level_location_definition_CCCV)
+
+    assert path == os.path.join('UK', 'Colintraive', '2015', 'December'), path
+
+multi_level_location_definition_SCCV = [
+    [
+        ('location', '%state/%city|%county|%village')
+    ],
+    [
+        ('year', '%Y')
+    ],
+    [
+        ('month', '%B')
+    ]
+]
+
+@attr('universalMultiLevel')  # Revised code to allow multi-level anywhere
+def test_get_folder_path_definition_multi_level_location_decode_state_known_village():
+    destination_folder = DestinationFolder()
+    media = Photo(helper.get_file('with-location.jpg'))
+    _metadata = media.get_metadata()
+    _metadata['latitude'] = 55.92352675
+    _metadata['longitude'] = -5.15257691666667  # see mock_location_db_json_txt
+    # use multi_level_location_expected, no need to recalculate
+    path = destination_folder.get_folder_path(_metadata, path_parts=multi_level_location_definition_SCCV)
+
+    assert path == os.path.join('Scotland', 'Colintraive', '2015', 'December'), path
+
