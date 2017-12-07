@@ -1,8 +1,8 @@
 build: false
 
-branches:
-  only:
-    - never-build-branch-automatically-dont-use-this-name
+#branches:
+#  only:
+#    - never-build-branch-automatically-dont-use-this-name
     
 environment:
   matrix:
