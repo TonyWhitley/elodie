@@ -31,7 +31,7 @@ the <term> after the |
 
 """
 
-class DestinationPath():
+class Destination_path_pattern():
     """
     Get the 'full_path' definition from the [Folder] section of ~/config.ini
     """
@@ -66,15 +66,26 @@ class DestinationPath():
             self.raw_full_path = raw_config['Folder']['full_path']
         except: # No full_path = ...
             self.raw_full_path = ''
-    def _get_raw_full_path(self):
-        """ unit testing """
+    def get_raw_full_path(self):
+        """ The final result """
         return self.raw_full_path
 
-    #This should be a separate object
-    def get_full_path(self, metadata):
-        _return = self._parse_full_path(self.raw_full_path, metadata)
-        return _return
-    def _parse_full_path(self, raw_full_path, metadata):
+class Destination_actual_path():
+    """
+    Given the 'full_path' definition from the [Folder] section of ~/config.ini
+    apply it to a file
+    """
+    def __init__(self, raw_full_path, filepath):
+        self.raw_full_path = raw_full_path
+        self.filepath = filepath
+        self.metadata = {}
+    def get_metadata_from_file(self):
+        # get the metadata for the file
+        pass #tbd
+    def _set_metadata(self, metadata):
+        """ unit test """
+        self.metadata = metadata
+    def __parse_full_path(self, raw_full_path):
         """
         Substitute atoms by items from metadata.
         Then evaluate any <conditional terms> and return the first one
@@ -87,23 +98,23 @@ class DestinationPath():
         atom_dict = {}
         for atom in atoms:
             if atom in ('location', 'hamlet', 'village', 'town', 'city', 'state', 'country', 'county'):
-                if atom in metadata:
-                    atom_dict[atom] = metadata[atom]
+                if atom in self.metadata:
+                    atom_dict[atom] = self.metadata[atom]
                 else:
-                    if 'lat' in metadata:  # We have latitude but don't have this location type
+                    if 'lat' in self.metadata:  # We have latitude but don't have this location type
                         atom_dict[atom] = '€UNKNOWN LOCATION'   # € is a "magic char" for fallback processing
                     else:
                         atom_dict[atom] = '€NO GPS'   # € is a "magic char" for fallback processing
             elif atom in ('camera_make', 'camera_model'):
-                if atom in metadata:
-                    atom_dict[atom] = metadata[atom]
+                if atom in self.metadata:
+                    atom_dict[atom] = self.metadata[atom]
                 else:
                     atom_dict[atom] = '€NO CAMERA INFO'
             elif atom.startswith('"'):
                 atom_dict[atom] = atom.strip('"') # Pass strings straight through unchanged
             else:
                 try:
-                    atom_dict[atom] = time.strftime(r'%'+atom, metadata['date_taken'])
+                    atom_dict[atom] = time.strftime(r'%'+atom, self.metadata['date_taken'])
                 except:
                     assert True, ('Unknown time format "%%%s"' % atom)
         for atom in atoms:
@@ -124,4 +135,7 @@ class DestinationPath():
         raw_full_path = re.sub('€', '', raw_full_path)
 
         return raw_full_path.strip()
+    def get_full_path(self):
+        _return = self.__parse_full_path(self.raw_full_path)
+        return _return
 
