@@ -14,6 +14,7 @@ import urllib
 from datetime import datetime
 from datetime import timedelta
 
+from elodie.compatability import _rename
 from elodie import constants
 
 def checksum(file_path, blocksize=65536):
@@ -49,7 +50,7 @@ def download_file(name, destination):
         return final_name
     except Exception as e:
         return False
-    
+
 def get_file(name):
     file_path = get_file_path(name)
     if not os.path.isfile(file_path):
@@ -113,8 +114,8 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-	  # (Windows/Python 3.6 does not accept a timestamp of 0 so
-	  #  use time.time() instead)
+    # (Windows/Python 3.6 does not accept a timestamp of 0 so
+    #  use time.time() instead)
       tz_shift = old_div((datetime.fromtimestamp(time.time()) -
                   datetime.utcfromtimestamp(time.time())).seconds,3600)
       # replace timestamp in file_name
@@ -153,17 +154,17 @@ def reset_dbs():
     """ Back up hash_db and location_db """
     hash_db = '{}-test'.format(constants.hash_db)
     if not os.path.isfile(hash_db):
-	    hash_db = constants.hash_db
-	    if os.path.isfile(hash_db):
-	        os.rename(hash_db, '{}-test'.format(hash_db))
-    #else restore_dbs wasn't called by a previous test, keep the
-    #existing hash_db backup
+      hash_db = constants.hash_db
+      if os.path.isfile(hash_db):
+          _rename(hash_db, '{}-test'.format(hash_db))
+      #else restore_dbs wasn't called by a previous test, keep the
+      #existing hash_db backup
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-	    location_db = constants.location_db
-	    if os.path.isfile(location_db):
-	        os.rename(location_db, '{}-test'.format(location_db))
+      location_db = constants.location_db
+      if os.path.isfile(location_db):
+          _rename(location_db, '{}-test'.format(location_db))
     #else restore_dbs wasn't called by a previous test, keep the
     #existing location_db backup
 
@@ -171,10 +172,8 @@ def restore_dbs():
     """ Restore back ups of hash_db and location_db """
     hash_db = '{}-test'.format(constants.hash_db)
     if os.path.isfile(hash_db):
-        # If you want cross-platform overwriting of the destination, 
-        # use os.replace() instead of rename().
-        os.replace(hash_db, hash_db.replace('-test', ''))
+        _rename(hash_db, hash_db.replace('-test', ''))
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-        os.replace(location_db, location_db.replace('-test', ''))
+        _rename(location_db, location_db.replace('-test', ''))
