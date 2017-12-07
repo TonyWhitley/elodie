@@ -16,6 +16,13 @@ from elodie import log
 from elodie.config import load_config
 #from elodie.filesystem import FileSystem
 
+# +++ the extended folder_path handler
+from elodie.destination_path_config import Destination_path_pattern, Destination_actual_path
+from elodie import constants
+
+config_file = '%s/config.ini' % constants.application_directory
+# --- the extended folder_path handler
+
 class DestinationFolder(object):
     """A class for calculating the destination folder for a file."""
 
@@ -97,26 +104,43 @@ class DestinationFolder(object):
                     [(part, '')]
                 )
             else:
-                """ original  """
+                #""" original
                 this_part = []
                 for p in part.split('|'):
                     this_part.append(
                         (p, config_directory[p] if p in config_directory else '')
                     )
-                """ Not implemented yet
+                """ New way breaks old tests
                 this_part = self._parseFallbacks(config_directory, part)
                 """
+
                 self.cached_folder_path_definition.append(this_part)
 
         return self.cached_folder_path_definition
 
-    def get_folder_path(self, metadata):
+    def get_folder_path(self, metadata, path_parts=None):
         """Given a media's metadata this function returns the folder path as a string.
 
         :param metadata dict: Metadata dictionary.
+        :optional param path_parts list of tuples: Pre-defined path definition (for unit test)
         :returns: str
         """
-        path_parts = self.get_folder_path_definition()
+
+        # Stitch in the extended folder_path handler
+        config = Destination_path_pattern()
+        config_ini = os.path.join(os.getcwd(), 'elodie', 'tests', 'files', 'config_extended_1.ini')
+        config.read_config_file(config_file)
+        raw_full_path = config.get_raw_full_path()
+        if raw_full_path != '':
+            fpconfig = Destination_actual_path(raw_full_path, '') # Don't need the filepath as we'll fake the metadata
+            fpconfig._set_metadata(metadata)
+            full_path = fpconfig.get_full_path()
+            return full_path
+        # else extended folder_path handler is not specified in config.ini
+
+
+        if not path_parts:
+            path_parts = self.get_folder_path_definition()
         path = []
         for path_part in path_parts:
             # We support fallback values so that
@@ -213,6 +237,11 @@ class DestinationFolder(object):
 
         if(not found and folder_name == ''):
             folder_name = place_name['default']
+
+        # If there are | in the result, take the left side (first option)
+        folder_name = folder_name.split('|')[0]
+        # Normalise any mixed path separators
+        folder_name = os.path.normpath(folder_name)
 
         return folder_name
 
