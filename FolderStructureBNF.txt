@@ -1,0 +1,22 @@
+Folder structure BNF
+
+<full_path> ::= "full_path=" <term>
+<rule>      ::= <term-name> "=" <term>
+<term>      ::= <atoms> | <conditional term>
+<conditional term> ::= <atoms> <'|'> <atoms> | <conditional term> <'|'> <atoms>
+<atoms>     ::= <atom> | <atoms> <atom>
+<atom>      ::= <time format> | <photo data> | <text> | "%" <term-name> 
+<text>      ::= <'-'> | <'/'> | "%" <"text string">
+
+
+<time format> ::=  <any standard Python time directive, e.g. %Y for 2017>
+
+<photo data> ::= <photo location> | <photo camera information> 
+
+<photo location> ::= <'%country'> | <'%county'> | <'%city'> | <'%town'> | <'%village'> 
+<photo camera information> ::= <'%camera_make'> | <'%camera_model'> | 
+
+Values may be "UNKNOWN LOCATION" (GPS long/lat didn't give the requested location)
+or "NO GPS" (GPS information not present in the photo) or "NO CAMERA INFO".
+If those values are returned to a <conditional term> then processing skips to
+the <term> after the |
