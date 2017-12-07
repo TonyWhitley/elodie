@@ -14,7 +14,7 @@ import urllib
 from datetime import datetime
 from datetime import timedelta
 
-from elodie.compatability import _rename
+from elodie.compatibility import _rename
 from elodie import constants
 
 def checksum(file_path, blocksize=65536):
