@@ -23,3 +23,5 @@ build/**
 .vscode/.ropeproject/objectdb
 .vscode/launch.json
 .vscode/.ropeproject/config.py
+env/**
+testrun.bat
