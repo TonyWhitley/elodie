@@ -25,3 +25,4 @@ build/**
 .vscode/.ropeproject/config.py
 env/**
 testrun.bat
+/.vs/elodie/v16/TestStore/0
