@@ -16,6 +16,7 @@ from elodie import log
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
 from elodie.destination_folder import DestinationFolder
+from elodie.plugins.plugins import Plugins
 
 class FileSystem(object):
     """A class for interacting with the file system."""
