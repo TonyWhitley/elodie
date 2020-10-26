@@ -15,6 +15,8 @@ from datetime import datetime
 from datetime import timedelta
 
 from elodie.compatibility import _rename
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
 from elodie import constants
 
 def checksum(file_path, blocksize=65536):
@@ -152,28 +154,23 @@ def isclose(a, b, rel_tol = 1e-8):
 
 def reset_dbs():
     """ Back up hash_db and location_db """
-    hash_db = '{}-test'.format(constants.hash_db)
-    if not os.path.isfile(hash_db):
-      hash_db = constants.hash_db
-      if os.path.isfile(hash_db):
-          _rename(hash_db, '{}-test'.format(hash_db))
-      #else restore_dbs wasn't called by a previous test, keep the
-      #existing hash_db backup
-
-    location_db = '{}-test'.format(constants.location_db)
-    if os.path.isfile(location_db):
-      location_db = constants.location_db
-      if os.path.isfile(location_db):
-          _rename(location_db, '{}-test'.format(location_db))
-    #else restore_dbs wasn't called by a previous test, keep the
-    #existing location_db backup
+    # This is no longer needed. See gh-322
+    # https://github.com/jmathai/elodie/issues/322
+    pass
 
 def restore_dbs():
     """ Restore back ups of hash_db and location_db """
-    hash_db = '{}-test'.format(constants.hash_db)
-    if os.path.isfile(hash_db):
-        _rename(hash_db, hash_db.replace('-test', ''))
+    # This is no longer needed. See gh-322
+    # https://github.com/jmathai/elodie/issues/322
+    pass
 
-    location_db = '{}-test'.format(constants.location_db)
-    if os.path.isfile(location_db):
-        _rename(location_db, location_db.replace('-test', ''))
+
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate

@@ -18,3 +18,4 @@ full_path=%month/%year/%album|%location|%"UnknownLocation"
 # November/2017/London           if the location is known
 # November/2017/UnknownLocation  otherwise
 
+prefer_english_names=False

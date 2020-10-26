@@ -19,6 +19,7 @@ from elodie import constants
 from elodie import geolocation
 from elodie import log
 from elodie.compatibility import _decode
+from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -27,14 +28,16 @@ from elodie.media.text import Text
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
+from elodie.plugins.plugins import Plugins
 from elodie.result import Result
-
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 FILESYSTEM = FileSystem()
 
-
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
-
+    
     _file = _decode(_file)
     destination = _decode(destination)
 
@@ -42,19 +45,20 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     """
     if not os.path.exists(_file):
         log.warn('Could not find %s' % _file)
-        print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-            (_file, _file))
+        log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                  (_file, _file))
         return
     # Check if the source, _file, is a child folder within destination
-    elif destination.startswith(os.path.dirname(_file)):
-        print('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (_file, destination))
+    elif destination.startswith(os.path.abspath(os.path.dirname(_file))+os.sep):
+        log.all('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (
+            _file, destination))
         return
 
 
     media = Media.get_class_by_file(_file, get_all_subclasses())
     if not media:
         log.warn('Not a supported file (%s)' % _file)
-        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
+        log.all('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
         return
 
     if album_from_folder:
@@ -63,12 +67,22 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=allow_duplicates, move=False)
     if dest_path:
-        print('%s -> %s' % (_file, dest_path))
+        log.all('%s -> %s' % (_file, dest_path))
     if trash:
         send2trash(_file)
 
     return dest_path or None
 
+@click.command('batch')
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
+def _batch(debug):
+    """Run batch() for all plugins.
+    """
+    constants.debug = debug
+    plugins = Plugins()
+    plugins.run_batch()
+       
 
 @click.command('import')
 @click.option('--destination', type=click.Path(file_okay=False),
@@ -85,8 +99,10 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
               help='Import the file even if it\'s already been imported.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--exclude-regex', default=set(), multiple=True,
+              help='Regular expression for directories or files to exclude.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, exclude_regex, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -103,12 +119,22 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
         paths.add(source)
     if file:
         paths.add(file)
+
+    # if no exclude list was passed in we check if there's a config
+    if len(exclude_regex) == 0:
+        config = load_config()
+        if 'Exclusions' in config:
+            exclude_regex = [value for key, value in config.items('Exclusions')]
+
+    exclude_regex_list = set(exclude_regex)
+
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None))
+            files.update(FILESYSTEM.get_all_files(path, None, exclude_regex_list))
         else:
-            files.add(path)
+            if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
+                files.add(path)
 
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
@@ -128,7 +154,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
 def _generate_db(source, debug):
-    """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
+    """Regenerate the hash.json database which contains all of the sha256 signatures of media files. The hash.json file is located at ~/.elodie/.
     """
     constants.debug = debug
     result = Result()
@@ -187,8 +213,8 @@ def update_location(media, file_path, location_name):
             'latitude'], location_coords['longitude'])
         if not location_status:
             log.error('Failed to update location')
-            print(('{"source":"%s",' % file_path,
-                '"error_msg":"Failed to update location"}'))
+            log.all(('{"source":"%s",' % file_path,
+                       '"error_msg":"Failed to update location"}'))
             sys.exit(1)
     return True
 
@@ -202,7 +228,7 @@ def update_time(media, file_path, time_string):
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
         log.error(msg)
-        print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
+        log.all('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
         sys.exit(1)
 
     time = datetime.strptime(time_string, time_format)
@@ -248,8 +274,8 @@ def _update(album, location, time, title, paths, debug):
             has_errors = True
             result.append((current_file, False))
             log.warn('Could not find %s' % current_file)
-            print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (current_file, current_file))
+            log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                      (current_file, current_file))
             continue
 
         current_file = os.path.expanduser(current_file)
@@ -316,8 +342,8 @@ def _update(album, location, time, title, paths, debug):
             dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
             log.info(u'%s -> %s' % (current_file, dest_path))
-            print('{"source":"%s", "destination":"%s"}' % (current_file,
-                dest_path))
+            log.all('{"source":"%s", "destination":"%s"}' % (current_file,
+                                                               dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
@@ -345,7 +371,14 @@ main.add_command(_import)
 main.add_command(_update)
 main.add_command(_generate_db)
 main.add_command(_verify)
+main.add_command(_batch)
 
 
 if __name__ == '__main__':
-    main()
+    #Initialize ExifTool Subprocess
+    exiftool_addedargs = [
+       u'-config',
+        u'"{}"'.format(constants.exiftool_config)
+    ]
+    with ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs) as et:
+        main()

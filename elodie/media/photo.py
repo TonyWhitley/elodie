@@ -14,7 +14,6 @@ import time
 from datetime import datetime
 from re import compile
 
-
 from elodie import log
 from .media import Media
 
@@ -29,13 +28,22 @@ class Photo(Media):
     __name__ = 'Photo'
 
     #: Valid extensions for photo files.
-    extensions = ('arw', 'cr2', 'dng', 'gif', 'jpeg', 'jpg', 'nef', 'rw2')
+    extensions = ('arw', 'cr2', 'dng', 'gif', 'heic', 'jpeg', 'jpg', 'nef', 'png', 'rw2')
 
     def __init__(self, source=None):
         super(Photo, self).__init__(source)
 
         # We only want to parse EXIF once so we store it here
         self.exif = None
+
+        # Optionally import Pillow - see gh-325
+        # https://github.com/jmathai/elodie/issues/325
+        self.pillow = None
+        try:
+            from PIL import Image
+            self.pillow = Image
+        except ImportError:
+            pass
 
     def get_date_taken(self):
         """Get the date which the photo was taken.
@@ -91,9 +99,34 @@ class Photo(Media):
         """
         source = self.source
 
-        # gh-4 This checks if the source file is an image.
-        # It doesn't validate against the list of supported types.
-        if(imghdr.what(source) is None):
-            return False
+        # HEIC is not well supported yet so we special case it.
+        # https://github.com/python-pillow/Pillow/issues/2806
+        extension = os.path.splitext(source)[1][1:].lower()
+        if(extension != 'heic'):
+            # gh-4 This checks if the source file is an image.
+            # It doesn't validate against the list of supported types.
+            # We check with imghdr and pillow.
+            if(imghdr.what(source) is None):
+                # Pillow is used as a fallback and if it's not available we trust
+                #   what imghdr returned.
+                if(self.pillow is None):
+                    return False
+                else:
+                    # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
+                    # see https://github.com/jmathai/elodie/issues/281
+                    # before giving up, we use `pillow` imaging library to detect file type
+                    #
+                    # It is important to note that the library doesn't decode or load the
+                    # raster data unless it really has to. When you open a file,
+                    # the file header is read to determine the file format and extract
+                    # things like mode, size, and other properties required to decode the file,
+                    # but the rest of the file is not processed until later.
+                    try:
+                        im = self.pillow.open(source)
+                    except IOError:
+                        return False
 
-        return os.path.splitext(source)[1][1:].lower() in self.extensions
+                    if(im.format is None):
+                        return False
+        
+        return extension in self.extensions

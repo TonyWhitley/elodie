@@ -20,6 +20,7 @@ from elodie.localstorage import Db
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
+__PREFER_ENGLISH_NAMES__ = None
 
 
 def coordinates_by_name(name):
@@ -103,6 +104,10 @@ def get_key():
     if __KEY__ is not None:
         return __KEY__
 
+    if constants.mapquest_key is not None:
+        __KEY__ = constants.mapquest_key
+        return __KEY__
+
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
         return None
@@ -114,6 +119,24 @@ def get_key():
     __KEY__ = config['MapQuest']['key']
     return __KEY__
 
+def get_prefer_english_names():
+    global __PREFER_ENGLISH_NAMES__
+    if __PREFER_ENGLISH_NAMES__ is not None:
+        return __PREFER_ENGLISH_NAMES__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return False
+
+    config = load_config()
+    if('MapQuest' not in config):
+        return False
+
+    if('prefer_english_names' not in config['MapQuest']):
+        return False
+
+    __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
+    return __PREFER_ENGLISH_NAMES__
 
 def place_name(lat, lon):
     lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
@@ -140,7 +163,9 @@ def place_name(lat, lon):
     if(geolocation_info is not None and 'address' in geolocation_info):
         address = geolocation_info['address']
         log.info('Location: "%s"' % geolocation_info['display_name'])
-        for loc in ['hamlet', 'village', 'town', 'city', 'county', 'state', 'country']:
+        # gh-386 adds support for town
+        # taking precedence after city for backwards compatibility
+        for loc in ['hamlet', 'village', 'city', 'town', 'state', 'country']:
             if(loc in address):
                 lookup_place_name[loc] = address[loc]
                 # In many cases the desired key is not available so we
@@ -168,6 +193,7 @@ def lookup(**kwargs):
         return None
 
     key = get_key()
+    prefer_english_names = get_prefer_english_names()
 
     if(key is None):
         return None
@@ -178,11 +204,15 @@ def lookup(**kwargs):
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
             path = '/nominatim/v1/reverse.php'
-        url = 'http://open.mapquestapi.com%s?%s' % (
+        url = '%s%s?%s' % (
+                    constants.mapquest_base_url,
                     path,
                     urllib.parse.urlencode(params)
               )
-        r = requests.get(url)
+        headers = {}
+        if(prefer_english_names):
+            headers = {'Accept-Language':'en-EN,en;q=0.8'}
+        r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
         log.error(e)

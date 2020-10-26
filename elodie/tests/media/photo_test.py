@@ -21,6 +21,9 @@ from elodie.media.photo import Photo
 
 os.environ['TZ'] = 'GMT'
 
+setup_module = helper.setup_module
+teardown_module = helper.teardown_module
+
 def test_photo_extensions():
     photo = Photo()
     extensions = photo.extensions
@@ -29,9 +32,11 @@ def test_photo_extensions():
     assert 'cr2' in extensions
     assert 'dng' in extensions
     assert 'gif' in extensions
+    assert 'heic' in extensions
     assert 'jpg' in extensions
     assert 'jpeg' in extensions
     assert 'nef' in extensions
+    assert 'png' in extensions
     assert 'rw2' in extensions
 
     valid_extensions = Photo.get_valid_extensions()
@@ -110,6 +115,14 @@ def test_get_coordinates_with_zero_coordinate():
     assert helper.isclose(latitude,51.55325), latitude
     assert helper.isclose(longitude,-0.00417777777778), longitude
 
+def test_get_coordinates_with_null_coordinate():
+    photo = Photo(helper.get_file('with-null-coordinates.jpg'))
+    latitude = photo.get_coordinate('latitude')
+    longitude = photo.get_coordinate('longitude')
+
+    assert latitude is None, latitude
+    assert longitude is None, longitude
+
 @attr('DST')
 def test_get_date_taken():
     photo = Photo(helper.get_file('plain.jpg'))
@@ -160,6 +173,17 @@ def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))
 
     assert not photo.is_valid()
+
+def test_is_valid_fallback_using_pillow():
+    photo = Photo(helper.get_file('imghdr-error.jpg'))
+
+    assert photo.is_valid()
+
+def test_pillow_not_loaded():
+    photo = Photo(helper.get_file('imghdr-error.jpg'))
+    photo.pillow = None
+
+    assert photo.is_valid() == False
 
 def test_set_album():
     temporary_folder, folder = helper.create_working_folder()
@@ -335,7 +359,9 @@ def test_various_types():
         'arw': (2007, 4, 8, 17, 41, 18, 6, 98, 0),
         'cr2': (2005, 10, 29, 16, 14, 44, 5, 302, 0),
         'dng': (2009, 10, 20, 9, 10, 46, 1, 293, 0),
+        'heic': (2019, 5, 26, 10, 33, 20, 6, 146, 0),
         'nef': (2008, 10, 24, 9, 12, 56, 4, 298, 0),
+        'png': (2015, 1, 18, 12, 1, 1, 6, 18, 0),
         'rw2': (2014, 11, 19, 23, 7, 44, 2, 323, 0)
     }
 

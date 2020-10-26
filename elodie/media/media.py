@@ -11,13 +11,11 @@ are used to represent the actual files.
 from __future__ import print_function
 
 import os
+import six
 
 # load modules
-from elodie import constants
-from elodie.dependencies import get_exiftool
 from elodie.external.pyexiftool import ExifTool
 from elodie.media.base import Base
-
 
 class Media(Base):
 
@@ -53,11 +51,7 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
-        self.exiftool_addedargs = [
-            '-overwrite_original',
-            u'-config',
-            u'"{}"'.format(constants.exiftool_config)
-        ]
+        self.exif_metadata = None
 
     def get_album(self):
         """Get album from EXIF
@@ -96,6 +90,11 @@ class Media(Base):
         for key in self.latitude_keys + self.longitude_keys:
             if key not in exif:
                 continue
+            if isinstance(exif[key], six.string_types) and len(exif[key]) == 0:
+                # If exiftool GPS output is empty, the data returned will be a str
+                # with 0 length.
+                # https://github.com/jmathai/elodie/issues/354
+                continue
 
             # Cast coordinate to a float due to a bug in exiftool's
             #   -json output format.
@@ -125,19 +124,16 @@ class Media(Base):
 
         The attributes are cached when they are read for the first time.
         """
-        if self.exiftool_attributes_cache == None:
-          source = self.source
-          exiftool = get_exiftool()
-          if(exiftool is None):
-              metadata = False
-          else:
-            with ExifTool(addedargs=self.exiftool_addedargs) as et:
-                metadata = et.get_metadata(source)
-                if not metadata:
-                    metadata = False
-          self.exiftool_attributes_cache = metadata
+        source = self.source
 
-        return self.exiftool_attributes_cache
+        #Cache exif metadata results and use if already exists for media
+        if(self.exif_metadata is None):
+            self.exif_metadata = ExifTool().get_metadata(source)
+
+        if not self.exif_metadata:
+            return False
+
+        return self.exif_metadata
 
     def get_camera_make(self):
         """Get the camera make stored in EXIF.
@@ -217,6 +213,7 @@ class Media(Base):
         """Resets any internal cache
         """
         self.exiftool_attributes = None
+        self.exif_metadata = None
         super(Media, self).reset_cache()
 
     def set_album(self, album):
@@ -326,7 +323,6 @@ class Media(Base):
         source = self.source
 
         status = ''
-        with ExifTool(addedargs=self.exiftool_addedargs) as et:
-            status = et.set_tags(tags, source)
+        status = ExifTool().set_tags(tags,source)
 
         return status != ''
